@@ -1,28 +1,35 @@
+
+maintainer="Nikroks <nikroks@mainlining.org>"
 _flavor="postmarketos-qcom-sm7125"
 pkgname=linux-$_flavor
-pkgver=5.19.0
+pkgver=6.14.7
 pkgrel=0
 pkgdesc="Mainline Kernel fork for SM7125 devices"
 arch="aarch64"
 _carch="arm64"
-url="https://github.com/map220v/sm7125-mainline"
+url="https://github.com/sm7125-mainline/linux"
 license="GPL-2.0-only"
 options="!strip !check !tracedeps
 	pmb:cross-native
 	pmb:kconfigcheck-nftables
 	"
-makedepends="bison findutils flex installkernel openssl-dev perl"
+makedepends="
+	bison
+	findutils
+	flex
+	postmarketos-installkernel
+	openssl-dev
+	perl
+	python3
+	"
 
-_repo="sm7125-mainline"
-_config="config-$_flavor.$arch"
-_commit="97744a6d9de46fe47f780de7213573201df15c69"
+_tag="sm7125-$pkgver"
 
-# Source
 source="
-	$_repo-$_commit.tar.gz::https://github.com/map220v/$_repo/archive/$_commit/$_repo-$_commit.tar.gz
-	$_config
+	linux-$_tag.tar.gz::$url/archive/$_tag/linux-$_tag.tar.gz
+	config-$_flavor.$arch
 "
-builddir="$srcdir/$_repo-$_commit"
+builddir="$srcdir/linux-$_tag"
 
 prepare() {
 	default_prepare
@@ -37,23 +44,20 @@ build() {
 
 package() {
 	mkdir -p "$pkgdir"/boot
-
-	install -Dm644 "$builddir/arch/$_carch/boot/Image.gz" \
-		"$pkgdir/boot/vmlinuz"
-
-	make modules_install dtbs_install \
+	make zinstall modules_install dtbs_install \
 		ARCH="$_carch" \
 		INSTALL_PATH="$pkgdir"/boot/ \
 		INSTALL_MOD_PATH="$pkgdir" \
 		INSTALL_MOD_STRIP=1 \
-		INSTALL_DTBS_PATH="$pkgdir"/usr/share/dtb
+		INSTALL_DTBS_PATH="$pkgdir"/boot/dtbs
 	rm -f "$pkgdir"/lib/modules/*/build "$pkgdir"/lib/modules/*/source
 
 	install -D "$builddir"/include/config/kernel.release \
 		"$pkgdir"/usr/share/kernel/$_flavor/kernel.release
 }
 
+
 sha512sums="
-626f17fd4f1fbd5851e875e3e1548af49a29aa1ec7882ae07c9ac0d83479ef7c2df02b95cbe2753275fb78fb6c1dd643b9792c488d3efefcc2378473161ec3b9  sm7125-mainline-97744a6d9de46fe47f780de7213573201df15c69.tar.gz
-221eb6409b1747f2503d0374d4656eab546932ad2b702183b3d6503ef20e93e07ebdf65b198250917fa7a61afe68059938543396ca066f3c25872de69f65339c  config-postmarketos-qcom-sm7125.aarch64
+11c619335ee39c73f7a67d890f3fa1e4b80836e0223bb406f82dec1c81e154384b6093af48ce280e51d4927b14cf0f8f2736cb49ea56fd751981ac6b3c693d37  linux-sm7125-6.14.7.tar.gz
+efde0578e85dff8f09704c9dde7c35b8482c4429ade475eb0774a10062d7424de61920b42143daea76c8df732d8830bde168d98c9cf9652ec70dfb0bb63ec932  config-postmarketos-qcom-sm7125.aarch64
 "

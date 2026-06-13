@@ -1,0 +1,6 @@
+./lib/firmware/qcom/sm7125/a72q/a615_zap.mbn
+./lib/firmware/qcom/sm7125/a72q/adsp.mbn
+./lib/firmware/qcom/sm7125/a72q/cdsp.mbn
+./lib/firmware/qcom/sm7125/a72q/ipa_fws.mbn
+./lib/firmware/qcom/sm7125/a72q/venus.mbn
+./lib/firmware/qcom/sm7125/a72q/modem.mbn

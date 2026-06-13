@@ -1,30 +1,36 @@
 # Reference: <https://postmarketos.org/devicepkg>
+maintainer="Erikas Bitovtas <xerikasxx@gmail.com>"
 pkgname=device-samsung-a72q
 pkgdesc="Samsung Galaxy A72"
-pkgver=2.1
+pkgver=9
 pkgrel=1
 url="https://postmarketos.org"
 license="MIT"
 arch="aarch64"
 options="!check !archcheck"
 depends="
-	linux-postmarketos-qcom-sm7125
-	mesa-dri-gallium
+	make-dynpart-mappings
 	mkbootimg
+	linux-postmarketos-qcom-sm7125
 	postmarketos-base
+	swclock-offset
+	soc-qcom-sm7125
+	soc-qcom-sm7125-ucm
+	systemd-boot
 "
 makedepends="devicepkg-dev"
 source="
 	deviceinfo
-	30-gpu-firmware.files
-	GalaxyA72.conf
-	HiFi.conf
+	kernel-cmdline.conf
+	hexagonrpcd.confd
+	modules-initfs
+	81-libssc-samsung-a72q.rules
 "
 
 subpackages="
 	$pkgname-nonfree-firmware:nonfree_firmware
-	$pkgname-mainline-firmware:mainline_firmware
-	$pkgname-alsa:alsa
+	$pkgname-nonfree-firmware-openrc:nonfree_firmware_openrc
+	$pkgname-nonfree-firmware-udev:nonfree_firmware_udev
 "
 
 build() {
@@ -33,51 +39,41 @@ build() {
 
 package() {
 	devicepkg_package $startdir $pkgname
-}
 
-mainline_firmware() {
-	pkgdesc="Firmware support packages for mainline kernel"
-	depends="firmware-samsung-a72q-adreno"
-	install_if="linux-postmarketos-qcom-sm7125 $pkgname-nonfree-firmware"
-	mkdir "$subpkgdir"
-
-	install -Dm644 "$srcdir/30-gpu-firmware.files" \
-		"$subpkgdir/etc/postmarketos-mkinitfs/files/30-gpu-firmware.files"
+	install -Dm644 "$srcdir"/81-libssc-samsung-a72q.rules \
+		"$pkgdir"/usr/lib/udev/rules.d/81-libssc-samsung-a72q.rules
+	install -Dm644 "$srcdir"/hexagonrpcd.confd \
+		"$pkgdir"/usr/share/hexagonrpcd/hexagonrpcd-adsp-sensorspd.conf
 }
 
 nonfree_firmware() {
-	pkgdesc="Firmware for GPU, Audio, Modem, WiFi, etc."
+	pkgdesc="GPU, venus, modem and sensor firmware"
 	depends="
-		firmware-samsung-a72q-adreno
-		firmware-samsung-a72q-adsp
-		firmware-samsung-a72q-cdsp
-		firmware-samsung-a72q-ipa
-		firmware-samsung-a72q-modem
-		firmware-samsung-a72q-wlan
-		firmware-samsung-a72q-bluetooth
-		firmware-samsung-a72q-venus
-		msm-modem
-		msm-modem-uim-selection
-		pd-mapper
-		tqftpserv
-		"
-	install="$subpkgname.post-install"
+		firmware-samsung-a72q
+		soc-qcom-sm7125-nonfree-firmware
+		hexagonrpcd>=0.3.2-r3
+	"
+
+	amove usr/share/hexagonrpcd/hexagonrpcd-adsp-sensorspd.conf
+}
+
+nonfree_firmware_openrc() {
+	install_if="$pkgname-nonfree-firmware=$pkgver-r$pkgrel openrc"
+	install="$subpkgname.post-install $subpkgname.post-upgrade"
+	depends="hexagonrpcd-openrc openrc"
+
 	mkdir "$subpkgdir"
 }
 
-alsa() {
-	pkgdesc="Audio configuration files"
-	depends="alsa-ucm-conf"
-	install_if="linux-postmarketos-qcom-sm7125 $pkgname-nonfree-firmware"
-	mkdir "$subpkgdir"
-	
-	install -Dm644 "$srcdir/GalaxyA72.conf" "$subpkgdir/usr/share/alsa/ucm2/conf.d/sm8250/Galaxy A72.conf"
-	install -Dm644 "$srcdir/HiFi.conf" "$subpkgdir/usr/share/alsa/ucm2/Samsung/a72q/HiFi.conf"
+nonfree_firmware_udev() {
+	default_udev
+	install_if="$pkgname-nonfree-firmware=$pkgver-r$pkgrel udev"
 }
 
 sha512sums="
-1018a3ce6e9e27cee933612c45f9dc637583395334088c27e61be4a3d1fcb1ee0efdc1fb9a336b8cfd5ea4ce06ae76e012c9f2f358b3d6cf53cdfd052285bd50  deviceinfo
-2d05313b813a5434901ec3920d2b0c8040621676cb2c041ca4de2e67913cb3ea642b66363c80f9d1fc7b2bdd7d770f897433c75ad32f392c0917a7cbcde7e850  30-gpu-firmware.files
-98ebd0a980059b0571ddff3cb6bf61211f1c3969dc77c6623c0e46519affa7bace67904ebafb96b8e13d178659228461c355f19ad04aa0c588665f6883596c68  GalaxyA72.conf
-1cc56056899d85da276028b4a114a5360db392c5bfabe0a47ba927411a8a1466ff8cb36bfe52356db0ce297f741f49cd0bb49b6c6d46583a21f155f36bccf344  HiFi.conf
+0c49767d10b40fefb21d1f4a8f7e4d608a3a0073a186cd89b40b42d970cd9ad073fe59963d81c9b03deec9529e4f7925dd15591e48c0c55cdab027099fbbe605  deviceinfo
+97e88eaa9b8e7989a20d2572479fe5d1fe0284de862da11c91b1f347099d5704673837db01a6b0c289fee0a2d7236f64fba31fd6001475f957c23203e34fd6fb  kernel-cmdline.conf
+eeddf5724aaa5614b0e0e9940cee13a8dc5eeeb811f634696a7d590497bbf2aef49b06b2a0e786d37032c4f5f07000538c8dd781a71ef8c3b6943c905515a2f0  hexagonrpcd.confd
+325605595f78e5a66bd12bad0e050a66c898fb30a797893a79b7b0a319519c9700e985fd5b0c8cf6d89a2775ad2310764acebd740067486fc571f314826c42ee  modules-initfs
+68fcf4cf841318e1def5342b61eba742237c61dceb1714303400d37a9318b34d75d11b47072b88e59c80e25b16cfacf2c30d99989533285a5ffbbd7f722112eb  81-libssc-samsung-a72q.rules
 "

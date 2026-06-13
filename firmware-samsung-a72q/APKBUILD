@@ -1,96 +1,52 @@
+maintainer="Erikas Bitovtas <xerikasxx@gmail.com>"
 pkgname=firmware-samsung-a72q
-pkgver=20211222
-pkgrel=2
-pkgdesc="Firmware for Samsung Galaxy A72"
-subpackages="
-	$pkgname-adreno
-	$pkgname-adsp
-	$pkgname-cdsp
-	$pkgname-ipa
-	$pkgname-modem
-	$pkgname-venus
-	$pkgname-wlan
-	$pkgname-bluetooth
-	"
-url="https://github.com/map220v/a72q-firmware"
+pkgver=1
+pkgrel=1
+pkgdesc="Firmware for a72q"
+url="https://github.com/erikas9987/firmware-samsung-a72q"
 arch="aarch64"
+depends="linux-firmware-qcom linux-firmware-qca linux-firmware-ath10k"
 license="proprietary"
-options="!check !strip !archcheck !tracedeps pmb:cross-native"
-_commit="d279fb298ad9c9e7f23c23c8d88344d3724c5be9"
-source="https://github.com/map220v/a72q-firmware/archive/$_commit/a72q-firmware-$_commit.tar.gz"
-builddir="$srcdir/a72q-firmware-$_commit"
+options="!strip !check !archcheck !tracedeps textrels pmb:cross-native"
+
+_commit="e6e195ffb5341e4774c086ce662bc6f898b7ace4"
+
+source="
+	30-initramfs-firmware.files
+	$pkgname.tar.gz::$url/archive/$_commit/$pkgname-$_commit.tar.gz
+	firmware.files
+	sensor.files
+"
+
+subpackages="$pkgname-sensors:firmware_sensors"
 
 package() {
-	# parent package is empty
-	mkdir -p "$pkgdir"
+	ls; pwd;
+	ls /home/pmos/build/src
+	while IFS="" read -r _i || [ -n "$_i" ]; do
+		[ ! -d $(dirname $_i) ] && mkdir -p $(dirname $_i)
+		install -Dm644 "$srcdir/$pkgname-$_commit/$_i" "$pkgdir/$_i"
+	done < "$srcdir/firmware.files"
+
+	install -Dm644 "$srcdir/30-initramfs-firmware.files" -t \
+		"$pkgdir"/usr/share/mkinitfs/files
 }
 
-adreno() {
-	pkgdesc="Samsung Galaxy A72 adreno firmware"
+firmware_sensors() {
+	pkgdesc="Files to be included to add sensor support"
+	depends="$pkgname"
+	install_if="$pkgname-nonfree-firmware"
+	mkdir "$subpkgdir"
 
-	install -Dm644 "$builddir"/a6* -t \
-		"$subpkgdir/lib/firmware/qcom/"
-}
-
-adsp() {
-	pkgdesc="Samsung Galaxy A72 adsp firmware"
-
-	install -Dm644 "$builddir"/adsp* -t \
-		"$subpkgdir/lib/firmware/qcom/sm7125/a72q/"
-}
-
-cdsp() {
-	pkgdesc="Samsung Galaxy A72 cdsp firmware"
-
-	install -Dm644 "$builddir"/cdsp* -t \
-		"$subpkgdir/lib/firmware/qcom/sm7125/a72q/"
-}
-
-ipa() {
-	pkgdesc="Samsung Galaxy A72 ipa firmware"
-
-	install -Dm644 "$builddir"/ipa_fws.* -t \
-		"$subpkgdir/lib/firmware/qcom/sm7125/a72q/"
-}
-
-modem() {
-	pkgdesc="Samsung Galaxy A72 modem firmware"
-
-	# cp because of the modem_pr directory
-	mkdir -p "$subpkgdir/lib/firmware/qcom/sm7125/a72q/"
-	cp -r "$builddir"/modem* \
-		"$subpkgdir/lib/firmware/qcom/sm7125/a72q/"
-	find "$subpkgdir/lib/firmware/qcom/sm7125/a72q/" \
-		-type f -exec chmod 0644 {} \;
-}
-
-venus() {
-	pkgdesc="Samsung Galaxy A72 venus firmware"
-
-	install -Dm644 "$builddir"/venus.* -t \
-		"$subpkgdir/lib/firmware/qcom/sm7125/a72q/"
-}
-
-wlan() {
-	pkgdesc="Samsung Galaxy A72 wlan firmware"
-
-	install -Dm644 "$builddir"/firmware-5.bin -t \
-		"$subpkgdir/lib/firmware/ath10k/WCN3990/hw1.0/"
-	install -Dm644 "$builddir"/board-2.bin -t \
-		"$subpkgdir/lib/firmware/ath10k/WCN3990/hw1.0/"
-	install -Dm644 "$builddir"/wlanmdsp.mbn -t \
-		"$subpkgdir/lib/firmware/qcom/sm7125/a72q/"
-}
-
-bluetooth() {
-	pkgdesc="Samsung Galaxy A72 bluetooth firmware"
-
-	install -Dm644 "$builddir"/crbtfw21.tlv -t \
-		"$subpkgdir/lib/firmware/qca/"
-	install -Dm644 "$builddir"/crnv21.* -t \
-		"$subpkgdir/lib/firmware/qca/sm7125/a72q/"
+	while IFS="" read -r _i || [ -n "$_i" ]; do
+		[ ! -d $(dirname $_i) ] && mkdir -p $(dirname $_i)
+		install -Dm644 "$srcdir/$pkgname-$_commit/$_i" "$pkgdir/$_i"
+	done < "$srcdir/sensor.files"
 }
 
 sha512sums="
-1ccbbfb73bf949fe202d3333a59e39f2027ac5f67e536a8c28fa1154425b72a0a6a41eededa9af9b82292beefe4843e4e449fe84d87c31d5f2d6513004f04e18  a72q-firmware-d279fb298ad9c9e7f23c23c8d88344d3724c5be9.tar.gz
+4563fdb6dd0032d57afaeb8b9296acb09f4d7282072e709f608441028804974e3b40d018482b06f0067744038b78c895a53f497c9a4cd16872358760a7dfc0dc  30-initramfs-firmware.files
+2ca5707ee91f4b0e0037225a4d6bb097fec468486c11a88370d8b5a5f368e3169dc2c9c2c492f97f15d16917c2c9115b453df581ad0dd5fbb3e367e203413638  firmware-samsung-a72q.tar.gz
+16b17309b6ffeda9a48d13ca88f411123142f611ec31851b2520a7b063fb92d7963f313512bc8491ea4aaa48b8bf7efa6d32e7a7caab8650b81cfca84db99210  firmware.files
+84b730778be87cb9ff69c1be7a6cdbd79068c63a0427d8fe7b7eea4f9a490ae0d62bc868579676b92740444a671f0d4b3d63c71746401794b9c5dcc865ad25da  sensor.files
 "
